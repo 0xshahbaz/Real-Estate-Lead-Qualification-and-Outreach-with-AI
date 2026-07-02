@@ -1,0 +1,2283 @@
+{
+  "name": "Real Estate Lead Qualification and Outreach with AI",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Real Estate",
+        "formDescription": "Form to qualify properties",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What's your full name?"
+            },
+            {
+              "fieldLabel": "What suburb is your property in?",
+              "placeholder": "Place"
+            },
+            {
+              "fieldLabel": "What type of property is it?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "House"
+                  },
+                  {
+                    "option": "Apartment / Unit"
+                  },
+                  {
+                    "option": "Townhouse"
+                  },
+                  {
+                    "option": "Duplex"
+                  },
+                  {
+                    "option": "Commercial"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Are you the legal owner of this property?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Yes, I'm the owner"
+                  },
+                  {
+                    "option": "Joint ownership with partner/spouse"
+                  },
+                  {
+                    "option": "Family member is the owner"
+                  },
+                  {
+                    "option": "I'm acting on behalf of the owner"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "What's your timeline to sell?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "ASAP / Already on market"
+                  },
+                  {
+                    "option": "Within 1-3 months"
+                  },
+                  {
+                    "option": "Within 3-6 months"
+                  },
+                  {
+                    "option": "Just exploring options"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Do you have a asking price in mind?"
+            },
+            {
+              "fieldLabel": "Have you spoken to any other agents?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "No, you're my first contact"
+                  },
+                  {
+                    "option": "Yes, still deciding"
+                  },
+                  {
+                    "option": "Yes, not happy with them"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Your email address?"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "5b5eb750-a11c-4b66-bc22-4c0af68b2789",
+      "name": "On form submission",
+      "webhookId": "1482d80c-b024-4177-a9f6-8d6fe4aa421f"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are an expert real estate lead scoring analyst for a Brisbane, Australia property agency.. Your job is to analyze a lead record and output only valid JSON with scores and recommendations.\n\nBe strict and concise, Never return text outside of the JSON.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert real estate lead scoring analyst  for a Brisbane, Australia property agency.\n\nYou will receive a lead record and must classify them into \nexactly one of three categories based on their selling intent, \nownership status, timeline, and property details.\n\nLead Record:\nName: {{ $('On form submission').item.json['What\\'s your full name?'] }}\nSuburb: {{ $('On form submission').item.json['What suburb is your property in?'] }}\nProperty Type: {{ $('On form submission').item.json['What type of property is it?'] }}\nOwnership: {{ $('On form submission').item.json['Are you the legal owner of this property?'] }}\nTimeline: {{ $('On form submission').item.json['What\\'s your timeline to sell?'] }}\nAsking Price: {{ $('On form submission').item.json['Do you have a asking price in mind?'] }}\nOther Agents: {{ $('On form submission').item.json['Have you spoken to any other agents?'] }}\nEmail: {{ $('On form submission').item.json['Your email address?'] }}\n\nClassification Rules:\n\nHot Lead — Score as Hot if:\n- Timeline is \"ASAP\" or \"Within 1–3 months\"\n- They are the legal owner or joint owner\n- Property is in a high-demand Brisbane suburb \n  (inner city 10km radius: Paddington, New Farm, \n  Teneriffe, South Brisbane, West End, Bulimba, \n  Ascot, Hamilton, Clayfield, Wooloowin)\n- They have NOT spoken to other agents OR are \n  unhappy with current agent\n- Has a price in mind (even approximate)\n\nWarm Lead — Score as Warm if:\n- Timeline is \"Within 3–6 months\"\n- Ownership is joint or family member\n- Property is in middle-ring Brisbane suburbs \n  (8–20km from CBD: Chermside, Carindale, \n  Sunnybank, Indooroopilly, Kenmore, Redcliffe)\n- Has spoken to other agents but still deciding\n- Price is unclear or \"not sure yet\"\n\nCold Lead — Score as Cold if:\n- Timeline is \"Just exploring options\"\n- They are NOT the owner (acting on behalf)\n- Property is outer Brisbane or regional Queensland\n- Has committed to another agent already\n- No price indication and no urgency signals\n\nAdditional Rules:\n- Never be influenced by a polished name or suburb alone\n- If timeline is ASAP but ownership is unclear, default to Warm\n- If suburb is strong but timeline is \"just exploring\", \n  default to Warm not Hot\n- Default to Warm if genuinely uncertain\n\nReturn ONLY valid JSON — no text outside the JSON block."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        400,
+        -16
+      ],
+      "id": "42e8fb6c-51b6-4e8f-9fee-b0b38814e4cf",
+      "name": "AI Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -304
+      ],
+      "id": "295f91a7-7c6a-4f7f-986a-ec1f54a5a33c",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"lead-id\": \"12345\",\n  \"classification\": \"Hot\",\n  \"suburb\": \"Paddington\",\n  \"property_type\": \"House\",\n  \"timeline\": \"Within 1-3 months\",\n  \"ownership\": \"Yes, I'm the owner\",\n  \"reason\": \"Owner-occupier in high-demand inner Brisbane suburb...\",\n  \"recommended_action\": \"Call within 2 hours, offer appraisal this week\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        -304
+      ],
+      "id": "ce0aaf52-ec96-4d38-81bf-5e17cb7b8786",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AAPPZ8WUR",
+          "mode": "list",
+          "cachedResultName": "leads-notification"
+        },
+        "text": "=🟡 NEW WARM LEAD — Follow Up Within 24 Hours\n\nName: {{ $('On form submission').item.json['What\\'s your full name?'] }}\nSuburb: {{ $('On form submission').item.json['What suburb is your property in?'] }}\nProperty: {{ $('On form submission').item.json['What type of property is it?'] }}\nTimeline: {{ $('On form submission').item.json['What\\'s your timeline to sell?'] }}\nAI Reason: {{ $json.output.reason }}\n\nGoal: Build trust, share market insights, \nmove toward appraisal booking.\n✅ Nurture email sent automatically\n✅ Logged to Warm Leads sheet",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        -48
+      ],
+      "id": "fbb37352-02c4-4e2f-89d1-9f81e0bc153b",
+      "name": "Warm Leads  Notify Team",
+      "webhookId": "3d877ad1-09a3-4f6b-802e-4393b38441e1",
+      "credentials": {
+        "slackApi": {
+          "id": "e77CRN09H7IKO22R",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ACQS6K1DK",
+          "mode": "list",
+          "cachedResultName": "notify-team-leads"
+        },
+        "text": "=🔥 NEW HOT LEAD — Act Within 2 Hours\n\nName: {{ $('On form submission').item.json['What\\'s your full name?'] }}\nSuburb: {{ $('On form submission').item.json['What suburb is your property in?'] }}\nProperty: {{ $('On form submission').item.json['What type of property is it?'] }}\nTimeline: {{ $('On form submission').item.json['What\\'s your timeline to sell?'] }}\nOther Agents: {{ $('On form submission').item.json['Have you spoken to any other agents?'] }}\nAI Reason: {{ $json.output.reason }}\nRecommended Action: {{ $json.output.recommended_action }}\n\n✅ Welcome email sent automatically\n✅ Logged to Hot Leads sheet",
+        "otherOptions": {
+          "includeLinkToWorkflow": false,
+          "unfurl_links": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        -256
+      ],
+      "id": "7fd11877-113d-49d4-bd7f-4e786e642c5c",
+      "name": "Hot Leads Notify Team",
+      "webhookId": "a996edeb-7804-4586-8e4e-15a08bc9189d",
+      "credentials": {
+        "slackApi": {
+          "id": "e77CRN09H7IKO22R",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AAPPZ8WUR",
+          "mode": "list",
+          "cachedResultName": "leads-notification"
+        },
+        "text": "=🔵 COLD LEAD — Added to Nurture Sequence\n\nName: {{ $('On form submission').item.json['What\\'s your full name?'] }}\nSuburb: {{ $('On form submission').item.json['What suburb is your property in?'] }}\nTimeline: {{ $('On form submission').item.json['What\\'s your timeline to sell?'] }}\nAI Reason: {{ $json.output.reason }}\n\nNo action needed — nurture email sent.\nRe-qualifies automatically if they \nre-engage in 90 days.\n✅ Logged to Cold Leads sheet",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        176
+      ],
+      "id": "09633821-fed0-4e64-b131-ad85112722c9",
+      "name": "Cold Leads Notify Team",
+      "webhookId": "3e79975c-045a-4e80-b68c-ef49eff09cc5",
+      "credentials": {
+        "slackApi": {
+          "id": "e77CRN09H7IKO22R",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Your email address?'] }}",
+        "subject": "=Your property in {{ $('On form submission').item.json['What suburb is your property in?'] }}, let's talk this week",
+        "emailType": "text",
+        "message": "=Hi {{ $('On form submission').item.json['What\\'s your full name?'] }},\n\nThanks for reaching out. Based on what you've shared, \nyour property in {{ $('On form submission').item.json['What suburb is your property in?'] }} sounds like exactly what \nbuyers in Brisbane are looking for right now.\n\nI'd love to arrange a free property appraisal at a \ntime that suits you — no obligation, just a clear \npicture of what your home is worth in today's market.\n\n👉 Book a time here: https://calendly.com/muhammadshahbazmemon26079/ai-automation-15-min\n\nLooking forward to speaking with you.\n\nSarah Mitchell\nMitchell Property Brisbane\n(07) 3456 7890",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        -256
+      ],
+      "id": "e5d7e9fa-0633-487f-bfae-81c2761afd34",
+      "name": "Hot Leads Outreach to Clients",
+      "webhookId": "3454a8c1-8ddf-4ceb-9557-4405ad77b692",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4Qo4RfIBUeps16qe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Your email address?'] }}",
+        "subject": "Brisbane property market  —  useful info for you",
+        "emailType": "text",
+        "message": "=Hi {{ $('On form submission').item.json['What\\'s your full name?'] }},\n\nThanks for getting in touch. It sounds like you're \nin the early stages of planning your sale — which \nis actually the perfect time to start the conversation.\n\nI've put together a quick snapshot of what's happening \nin the Brisbane market right now, including recent sales \nin your area, that you might find useful.\n\nWould it help to jump on a quick 15-minute call? \nNo pressure — just want to make sure you have the \nright information when you're ready to move.\n\n👉 Pick a time here: https://calendly.com/muhammadshahbazmemon26079/ai-automation-15-min\n\nSarah Mitchell\nMitchell Property Brisbane",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        -48
+      ],
+      "id": "6812c2bd-02be-4e85-b633-da4bffac2917",
+      "name": "Warm Leads Outreach to Clients",
+      "webhookId": "cdd5f56c-9876-4ec8-82bb-2f8d49592a33",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4Qo4RfIBUeps16qe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Your email address?'] }}",
+        "subject": "Staying in touch  —  Brisbane property insights",
+        "emailType": "text",
+        "message": "=Hi {{ $('On form submission').item.json['What\\'s your full name?'] }},\n\nThanks for reaching out — even if the timing isn't \nquite right yet, it's great to connect.\n\nI'll occasionally share useful Brisbane market updates \nthat might help when you're ready to make a move. \nNo spam, just genuinely useful stuff.\n\nAnd whenever you're ready to explore your options, \nI'm here.\n\nSarah Mitchell\nMitchell Property Brisbane",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2016,
+        176
+      ],
+      "id": "85888d7d-fafa-4b31-bff7-5871d0d88ffe",
+      "name": "Cold Leads Outreach to Clients",
+      "webhookId": "80767189-3418-45f4-98d0-f1837e04de6c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4Qo4RfIBUeps16qe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Edit Fields').item.json.classification }}",
+                    "rightValue": "Hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "db7bd79b-8bd6-4034-acf1-bf048ac5f058"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hot Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1b3d5fa4-88bb-4d0d-9698-79ec5200359d",
+                    "leftValue": "={{ $('Edit Fields').item.json.classification }}",
+                    "rightValue": "Warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Warm Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c9ae6657-cfad-43ba-a047-5d5f8e9dcabc",
+                    "leftValue": "={{ $('Edit Fields').item.json.classification }}",
+                    "rightValue": "Cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cold Lead"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1392,
+        -64
+      ],
+      "id": "8f9bd6b1-5ca4-452c-b7af-e22d596ebf6b",
+      "name": "Leads Data Categorize"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -320
+      ],
+      "id": "6d068679-0a8d-4d5f-9006-b3b5676f130f",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "itB6Z1xsnNMTmrT8",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        -256
+      ],
+      "id": "c954f19f-650a-4099-87c9-0fa23652e45f",
+      "name": "Wait 48hrs (Hot)",
+      "webhookId": "wait-hot-001"
+    },
+    {
+      "parameters": {
+        "amount": 48,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2256,
+        -48
+      ],
+      "id": "c13d49a5-6a02-4280-bdfe-24f8314eb432",
+      "name": "Wait 48hrs (Warm)",
+      "webhookId": "wait-warm-001"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Your email address?'] }}",
+        "subject": "=Still thinking about selling in {{ $('On form submission').item.json['What suburb is your property in?'] }}?",
+        "emailType": "text",
+        "message": "=Hi {{ $('On form submission').item.json['What\\'s your full name?'] }},\n\nI wanted to follow up on your enquiry from a couple of days ago — I know things get busy.\n\nYour property in {{ $('On form submission').item.json['What suburb is your property in?'] }} is in a strong market right now and I'd hate for you to miss the window.\n\nIf you'd like to move forward or just have a quick chat first:\n👉 Book a free appraisal here: https://calendly.com/muhammadshahbazmemon26079/ai-automation-15-min\n\nIf the timing isn't right anymore, no worries at all — just let me know.\n\nSarah Mitchell\nMitchell Property Brisbane\n(07) 3456 7890",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2512,
+        -256
+      ],
+      "id": "dd8f52af-4c16-4bce-afba-21093802ac31",
+      "name": "Hot Lead Follow-Up Email",
+      "webhookId": "a94ce6b3-f060-48da-a4f2-2f07875cfe76",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4Qo4RfIBUeps16qe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json['Your email address?'] }}",
+        "subject": "Quick check in — any questions about selling?",
+        "emailType": "text",
+        "message": "=Hi {{ $('On form submission').item.json['What\\'s your full name?'] }},\n\nJust checking in to see if you had any questions after my last email.\n\nI know choosing the right agent takes time — I'm happy to jump on a quick 10-minute call to answer anything before you decide.\n\nNo pressure either way.\n\n👉 Pick a time here: https://calendly.com/muhammadshahbazmemon26079/ai-automation-15-min\n\nSarah Mitchell\nMitchell Property Brisbane",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2512,
+        -48
+      ],
+      "id": "cbacfb33-263b-4b0b-8063-e255c0828ba9",
+      "name": "Warm Lead Follow-Up Email",
+      "webhookId": "2197a2e4-8eec-49d4-82e4-256d642d21a9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4Qo4RfIBUeps16qe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUdcaFZbwUdCwGT",
+          "mode": "list",
+          "cachedResultName": "Real Estate Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJI9aDTV66DYsgr",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT/tblJI9aDTV66DYsgr"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json['What\\'s your full name?'] }}",
+            "Email": "={{ $('On form submission').item.json['Your email address?'] }}",
+            "Suburb": "={{ $('On form submission').item.json['What suburb is your property in?'] }}",
+            "Property Type": "={{ $('On form submission').item.json['What type of property is it?'] }}",
+            "Ownership": "={{ $('On form submission').item.json['Are you the legal owner of this property?'] }}",
+            "Timeline": "={{ $('On form submission').item.json['What\\'s your timeline to sell?'] }}",
+            "Asking Price": "={{ $('On form submission').item.json['Do you have a asking price in mind?'] }}",
+            "Other Agents": "={{ $('On form submission').item.json['Have you spoken to any other agents?'] }}",
+            "Classification": "={{ $json.classification }}",
+            "AI Reason": "={{ $('AI Agent').item.json.output.reason }}",
+            "Recommended Action": "={{ $('AI Agent').item.json.output.recommended_action }}",
+            "Status": "New",
+            "Source": "Website Form"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Suburb",
+              "displayName": "Suburb",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "House",
+                  "value": "House"
+                },
+                {
+                  "name": "Apartment / Unit",
+                  "value": "Apartment / Unit"
+                },
+                {
+                  "name": "Townhouse",
+                  "value": "Townhouse"
+                },
+                {
+                  "name": "Duplex",
+                  "value": "Duplex"
+                },
+                {
+                  "name": "Commercial",
+                  "value": "Commercial"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Ownership",
+              "displayName": "Ownership",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Asking Price",
+              "displayName": "Asking Price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Other Agents",
+              "displayName": "Other Agents",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Hot",
+                  "value": "Hot"
+                },
+                {
+                  "name": "Warm",
+                  "value": "Warm"
+                },
+                {
+                  "name": "Cold",
+                  "value": "Cold"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AI Reason",
+              "displayName": "AI Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Follow-Up sent",
+                  "value": "Follow-Up sent"
+                },
+                {
+                  "name": "Booked",
+                  "value": "Booked"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        -48
+      ],
+      "id": "e68f885b-c7c3-47db-8e1b-2567672de822",
+      "name": "Airtable Create Record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2rsTIsAsf5PHLMEJ",
+          "name": "Real Estate Leads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appUdcaFZbwUdCwGT",
+          "mode": "list",
+          "cachedResultName": "Real Estate Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJI9aDTV66DYsgr",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT/tblJI9aDTV66DYsgr"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Follow-Up sent",
+            "Email": "={{ $('On form submission').item.json['Your email address?'] }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Suburb",
+              "displayName": "Suburb",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "House",
+                  "value": "House"
+                },
+                {
+                  "name": "Apartment / Unit",
+                  "value": "Apartment / Unit"
+                },
+                {
+                  "name": "Townhouse",
+                  "value": "Townhouse"
+                },
+                {
+                  "name": "Duplex",
+                  "value": "Duplex"
+                },
+                {
+                  "name": "Commercial",
+                  "value": "Commercial"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ownership",
+              "displayName": "Ownership",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Asking Price",
+              "displayName": "Asking Price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Other Agents",
+              "displayName": "Other Agents",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Hot Lead",
+                  "value": "Hot Lead"
+                },
+                {
+                  "name": "Warm Lead",
+                  "value": "Warm Lead"
+                },
+                {
+                  "name": "Cold Lead",
+                  "value": "Cold Lead"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Reason",
+              "displayName": "AI Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Follow-Up sent",
+                  "value": "Follow-Up sent"
+                },
+                {
+                  "name": "Booked",
+                  "value": "Booked"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2752,
+        -256
+      ],
+      "id": "cfae6f73-1568-4eee-9910-5f4630f5001a",
+      "name": "Airtable Update Hot Lead",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2rsTIsAsf5PHLMEJ",
+          "name": "Real Estate Leads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appUdcaFZbwUdCwGT",
+          "mode": "list",
+          "cachedResultName": "Real Estate Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJI9aDTV66DYsgr",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT/tblJI9aDTV66DYsgr"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Follow-Up sent",
+            "Email": "={{ $('On form submission').item.json['Your email address?'] }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Suburb",
+              "displayName": "Suburb",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "House",
+                  "value": "House"
+                },
+                {
+                  "name": "Apartment / Unit",
+                  "value": "Apartment / Unit"
+                },
+                {
+                  "name": "Townhouse",
+                  "value": "Townhouse"
+                },
+                {
+                  "name": "Duplex",
+                  "value": "Duplex"
+                },
+                {
+                  "name": "Commercial",
+                  "value": "Commercial"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Ownership",
+              "displayName": "Ownership",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Asking Price",
+              "displayName": "Asking Price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Other Agents",
+              "displayName": "Other Agents",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Hot Lead",
+                  "value": "Hot Lead"
+                },
+                {
+                  "name": "Warm Lead",
+                  "value": "Warm Lead"
+                },
+                {
+                  "name": "Cold Lead",
+                  "value": "Cold Lead"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AI Reason",
+              "displayName": "AI Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Follow-Up sent",
+                  "value": "Follow-Up sent"
+                },
+                {
+                  "name": "Booked",
+                  "value": "Booked"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2752,
+        -48
+      ],
+      "id": "ba946cca-10a2-4a44-8867-61f40c4c9339",
+      "name": "Airtable Update Warm Lead",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2rsTIsAsf5PHLMEJ",
+          "name": "Real Estate Leads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d53ef5f8-9218-4a93-8af2-9852d8c552f4",
+              "name": "classification",
+              "value": "={{ $json.output?.classification?.toLowerCase().includes('hot') ? 'Hot' :\n   $json.output?.classification?.toLowerCase().includes('warm') ? 'Warm' :\n   $json.output?.classification?.toLowerCase().includes('cold') ? 'Cold' :\n   '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        -32
+      ],
+      "id": "daabb0b0-0e4c-4808-9382-9bd4282e87b9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "68cb06e8-2cc9-41ca-8fe7-728ba83dddf4",
+              "leftValue": "={{ $json.classification }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        -32
+      ],
+      "id": "e1c54335-5012-4707-b9e9-3dd90298f49c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ACQS6K1DK",
+          "mode": "list",
+          "cachedResultName": "notify-team-leads"
+        },
+        "text": "=⚠️ Lead classification failed for {{ $('On form submission').item.json['What\\'s your full name?'] }} {{ $('On form submission').item.json['Your email address?'] }} — needs manual review",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1168,
+        240
+      ],
+      "id": "71c78fdb-d062-4317-bcc9-877f70bcd13b",
+      "name": "Send a message",
+      "webhookId": "56769547-1326-41f5-b845-d2ba9829f5f9",
+      "credentials": {
+        "slackApi": {
+          "id": "e77CRN09H7IKO22R",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUdcaFZbwUdCwGT",
+          "mode": "list",
+          "cachedResultName": "Real Estate Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJI9aDTV66DYsgr",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT/tblJI9aDTV66DYsgr"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json['What\\'s your full name?'] }}",
+            "Email": "={{ $('On form submission').item.json['Your email address?'] }}",
+            "Suburb": "={{ $('AI Agent').item.json.output.suburb }}",
+            "Property Type": "={{ $('AI Agent').item.json.output.property_type }}",
+            "Ownership": "={{ $('AI Agent').item.json.output.ownership }}",
+            "Timeline": "={{ $('AI Agent').item.json.output.timeline }}",
+            "Asking Price": "={{ $('On form submission').item.json['Do you have a asking price in mind?'] }}",
+            "Other Agents": "={{ $('On form submission').item.json['Have you spoken to any other agents?'] }}",
+            "Classification": "={{ $('Edit Fields').item.json.classification }}",
+            "AI Reason": "={{ $('AI Agent').item.json.output.reason }}",
+            "Recommended Action": "={{ $('AI Agent').item.json.output.recommended_action }}",
+            "Status": "Needs Manual Review",
+            "Source": "Website Form"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Suburb",
+              "displayName": "Suburb",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "House",
+                  "value": "House"
+                },
+                {
+                  "name": "Apartment / Unit",
+                  "value": "Apartment / Unit"
+                },
+                {
+                  "name": "Townhouse",
+                  "value": "Townhouse"
+                },
+                {
+                  "name": "Duplex",
+                  "value": "Duplex"
+                },
+                {
+                  "name": "Commercial",
+                  "value": "Commercial"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Ownership",
+              "displayName": "Ownership",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Asking Price",
+              "displayName": "Asking Price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Other Agents",
+              "displayName": "Other Agents",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Hot",
+                  "value": "Hot"
+                },
+                {
+                  "name": "Warm",
+                  "value": "Warm"
+                },
+                {
+                  "name": "Cold",
+                  "value": "Cold"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AI Reason",
+              "displayName": "AI Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Follow-Up sent",
+                  "value": "Follow-Up sent"
+                },
+                {
+                  "name": "Booked",
+                  "value": "Booked"
+                },
+                {
+                  "name": "Needs Manual Review",
+                  "value": "Needs Manual Review"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1376,
+        240
+      ],
+      "id": "abb84fb1-7acb-4f33-89e5-42e492580df4",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2rsTIsAsf5PHLMEJ",
+          "name": "Real Estate Leads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appUdcaFZbwUdCwGT",
+          "mode": "list",
+          "cachedResultName": "Real Estate Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJI9aDTV66DYsgr",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT/tblJI9aDTV66DYsgr"
+        },
+        "filterByFormula": "={Email} = '{{ $json['Your email address?'] }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        0
+      ],
+      "id": "8c7f921a-bdfa-4136-ae82-9d82954216fd",
+      "name": "Search records",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2rsTIsAsf5PHLMEJ",
+          "name": "Real Estate Leads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e76b64fb-83a1-4d86-8e35-c5baa67bb1c6",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        0
+      ],
+      "id": "ea1b3a5b-7793-4079-8cf7-1ee3ef461234",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ACQS6K1DK",
+          "mode": "list",
+          "cachedResultName": "notify-team-leads"
+        },
+        "text": "=🔴 AI Agent failed to process lead: {{ $('On form submission').item.json['What\\'s your full name?'] }} {{ $('On form submission').item.json['Your email address?'] }} — technical failure, not a scoring issue. Check execution logs.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        720,
+        240
+      ],
+      "id": "66f4fd04-8458-4c03-ad7e-0a90202002db",
+      "name": "Send a message1",
+      "webhookId": "2ae3fe56-ff15-415c-be7d-97ab5ffce2d0",
+      "credentials": {
+        "slackApi": {
+          "id": "e77CRN09H7IKO22R",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appUdcaFZbwUdCwGT",
+          "mode": "list",
+          "cachedResultName": "Real Estate Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblJI9aDTV66DYsgr",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appUdcaFZbwUdCwGT/tblJI9aDTV66DYsgr"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json['What\\'s your full name?'] }}",
+            "Suburb": "={{ $('On form submission').item.json['What suburb is your property in?'] }}",
+            "Email": "={{ $('On form submission').item.json['Your email address?'] }}",
+            "Property Type": "={{ $('On form submission').item.json['What type of property is it?'] }}",
+            "Ownership": "={{ $('On form submission').item.json['Are you the legal owner of this property?'] }}",
+            "Timeline": "={{ $('On form submission').item.json['What\\'s your timeline to sell?'] }}",
+            "Asking Price": "={{ $('On form submission').item.json['Do you have a asking price in mind?'] }}",
+            "Other Agents": "={{ $('On form submission').item.json['Have you spoken to any other agents?'] }}",
+            "Source": "Website Form",
+            "AI Reason": "\"AI Agent node failed — see execution log\"",
+            "Status": "Needs Manual Review",
+            "Recommended Action": "\"AI Agent node failed — see execution log\"",
+            "Classification": "Error"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Suburb",
+              "displayName": "Suburb",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Property Type",
+              "displayName": "Property Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "House",
+                  "value": "House"
+                },
+                {
+                  "name": "Apartment / Unit",
+                  "value": "Apartment / Unit"
+                },
+                {
+                  "name": "Townhouse",
+                  "value": "Townhouse"
+                },
+                {
+                  "name": "Duplex",
+                  "value": "Duplex"
+                },
+                {
+                  "name": "Commercial",
+                  "value": "Commercial"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Ownership",
+              "displayName": "Ownership",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timeline",
+              "displayName": "Timeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Asking Price",
+              "displayName": "Asking Price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Other Agents",
+              "displayName": "Other Agents",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Hot",
+                  "value": "Hot"
+                },
+                {
+                  "name": "Warm",
+                  "value": "Warm"
+                },
+                {
+                  "name": "Cold",
+                  "value": "Cold"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AI Reason",
+              "displayName": "AI Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Recommended Action",
+              "displayName": "Recommended Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Follow-Up sent",
+                  "value": "Follow-Up sent"
+                },
+                {
+                  "name": "Booked",
+                  "value": "Booked"
+                },
+                {
+                  "name": "Needs Manual Review",
+                  "value": "Needs Manual Review"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        928,
+        240
+      ],
+      "id": "5e7faee5-7f5c-4f5c-ac18-ae09902832be",
+      "name": "Create a record1",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2rsTIsAsf5PHLMEJ",
+          "name": "Real Estate Leads"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ACQS6K1DK",
+          "mode": "list",
+          "cachedResultName": "notify-team-leads"
+        },
+        "text": "=Duplicate submission from {{ $('On form submission').item.json['What\\'s your full name?'] }} {{ $('On form submission').item.json['Your email address?'] }}, skipping",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        304,
+        240
+      ],
+      "id": "58874d64-d767-4f29-998c-da1eee6c4655",
+      "name": "Send a message2",
+      "webhookId": "c99fb43c-1b5b-4974-acd9-f3039f0df5af",
+      "credentials": {
+        "slackApi": {
+          "id": "e77CRN09H7IKO22R",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Warm Leads  Notify Team": {
+      "main": [
+        [
+          {
+            "node": "Warm Leads Outreach to Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Leads Notify Team": {
+      "main": [
+        [
+          {
+            "node": "Hot Leads Outreach to Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cold Leads Notify Team": {
+      "main": [
+        [
+          {
+            "node": "Cold Leads Outreach to Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leads Data Categorize": {
+      "main": [
+        [
+          {
+            "node": "Hot Leads Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Warm Leads  Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cold Leads Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48hrs (Hot)": {
+      "main": [
+        [
+          {
+            "node": "Hot Lead Follow-Up Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 48hrs (Warm)": {
+      "main": [
+        [
+          {
+            "node": "Warm Lead Follow-Up Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Lead Follow-Up Email": {
+      "main": [
+        [
+          {
+            "node": "Airtable Update Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Warm Lead Follow-Up Email": {
+      "main": [
+        [
+          {
+            "node": "Airtable Update Warm Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Warm Leads Outreach to Clients": {
+      "main": [
+        [
+          {
+            "node": "Wait 48hrs (Warm)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Leads Outreach to Clients": {
+      "main": [
+        [
+          {
+            "node": "Wait 48hrs (Hot)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable Create Record": {
+      "main": [
+        [
+          {
+            "node": "Leads Data Categorize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Airtable Create Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Create a record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b856940f-109f-4c09-ada5-145f07181864",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "feaa901ecc095fe068df8d882696af59d7d022e7a833becd0182d58229147995"
+  },
+  "id": "xvt5TvAdksNWoKME",
+  "tags": []
+}
